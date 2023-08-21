@@ -1,43 +1,69 @@
+
 const getState = ({ getStore, getActions, setStore }) => {
 	return {
 		store: {
-			demo: [
-				{
-					title: "FIRST",
-					background: "white",
-					initial: "white"
-				},
-				{
-					title: "SECOND",
-					background: "white",
-					initial: "white"
-				}
-			]
+			Favoritos: [],
+			peoples: [],
+			vehicles: [],
+			planets: [],
+			selected: undefined
 		},
 		actions: {
 			// Use getActions to call a function within a fuction
-			exampleFunction: () => {
-				getActions().changeColor(0, "green");
-			},
-			loadSomeData: () => {
-				/**
-					fetch().then().then(data => setStore({ "foo": data.bar }))
-				*/
-			},
-			changeColor: (index, color) => {
-				//get the store
-				const store = getStore();
+			loadPeople: async () => {
+				const peoples = await fetch("https://www.swapi.tech/api/people")
+				const data = await peoples.json()
+				if (data) {
+					data.results.map((result, index) => {
+						return getActions().CargarInformacionEspesifica(result, "peoples")
+					})
 
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
-				});
+				}
+			},
+			loadPlanets: async () => {
+				const planets = await fetch("https://www.swapi.tech/api/planets")
+				const data = await planets.json()
 
-				//reset the global store
-				setStore({ demo: demo });
+				if (data) {
+					data.results.map((result, index) => {
+						return getActions().CargarInformacionEspesifica(result, "planets")
+					})
+
+				}
+			},
+			loadVehicles: async () => {
+				const vehicles = await fetch("https://www.swapi.tech/api/vehicles")
+				const data = await vehicles.json()
+				const store = getStore()
+				if (data) {
+					data.results.map((result, index) => {
+						console.log("xdd")
+						return getActions().CargarInformacionEspesifica(result, "vehicles")
+					})
+
+				}
+
+			},
+			CargarInformacionEspesifica: async (result, tipo) => {
+				const resp = await fetch(result.url)
+				const data = await resp.json()
+				const store = getStore()
+				if (data.message === "ok") {
+					if (tipo === "planets") {
+						setStore({ ...store, planets: [...store.planets, { ...result, infoCompleta: data.result.properties }] })
+					} else if (tipo === "peoples") {
+						setStore({ ...store, peoples: [...store.peoples, { ...result, infoCompleta: data.result.properties }] })
+					} else if (tipo === "vehicles") {
+						setStore({ ...store, vehicles: [...store.vehicles, { ...result, infoCompleta: data.result.properties }] })
+					}
+				}
+
+
+			},
+			UpdateSelected: (info) => {
+				setStore({ ...getStore(), selected: info })
 			}
+
 		}
 	};
 };
